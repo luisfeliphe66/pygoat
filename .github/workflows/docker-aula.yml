@@ -1,0 +1,32 @@
+name: Docker Image CI
+
+on:
+  workflow_dispatch:
+    
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    
+  
+    - name: Docker Scout
+      uses: docker/scout-action@v1.10.0
+      with:
+        dockerhub-user: ${{ secrets.DOCKER_HUB_USER }}
+        dockerhub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        command: quickview,cves
+        sarif-file: docker_vuls.json
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4.3.4
+      if: always()
+      with:
+          name: docker_vuls
+          path: docker_vuls.json
